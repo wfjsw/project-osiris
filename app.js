@@ -11,6 +11,7 @@ var bot = new Telegram(config['api-key'], config['options']);
 const message_type = ['text', 'audio', 'document', 'photo', 'sticker', 'video', 'voice', 'contact', 'location', 'new_chat_participant', 'left_chat_participant', 'new_chat_title', 'new_chat_photo', 'delete_chat_photo', 'group_chat_created'];
 const inline_type = ['inline_query', 'chosen_inline_result', 'callback_query'];
 var global_e = {
+    me: {},
     libs: {},
     plugins: {},
     preprocessors: [],
@@ -48,9 +49,8 @@ function loadAllLib() {
 
         console.log(`Loading library ${targetlib} ...`);
         global_e.libs[libname] = require(`./lib/${targetlib}`);
-        if (global_e.plugins[libname])
-            if (global_e.plugins[libname].init) 
-                global_e.plugins[libname].init(global_e);
+\       if (global_e.libs[libname].init) 
+                global_e.libs[libname].init(global_e);
     }) 
 }
 
@@ -111,5 +111,6 @@ inline_type.forEach((type) => {
 })
 
 bot.getMe().then((ret) => {
+    global_e.me(ret)
     console.log(ret);
 })
