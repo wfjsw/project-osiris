@@ -35,7 +35,7 @@ function getJsFilename(original) {
 
 function loadLib(id) {
     if (global_e.libs[id]) delete global_e.libs[id];
-    global_e.libs[id] = require(`lib/${id}.js`);
+    global_e.libs[id] = require(`./lib/${id}.js`);
 }
 
 function loadAllLib() {
@@ -47,7 +47,7 @@ function loadAllLib() {
         if (libname.slice(0,9).toLowerCase() == 'disabled_') return;
 
         console.log(`Loading library ${targetlib} ...`);
-        global_e.libs[libname] = require(`lib/${targetlib}`);
+        global_e.libs[libname] = require(`./lib/${targetlib}`);
         if (global_e.plugins[libname].init) global_e.plugins[libname].init(global_e);
     }) 
 }
@@ -62,7 +62,7 @@ function loadAllPlugin() {
         if (plgname.slice(0,9).toLowerCase() == 'disabled_') return;
 
         console.log(`Loading plugin ${targetplg} ...`);
-        global_e.plugins[plgname] = require(`plugins/${targetplg}`);
+        global_e.plugins[plgname] = require(`./plugins/${targetplg}`);
         if (global_e.plugins[plgname].init) global_e.plugins[plgname].init(global_e);
         if (global_e.plugins[plgname].preprocess)
             global_e.preprocessors.push(global_e.plugins[plgname].preprocess);
