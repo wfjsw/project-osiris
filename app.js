@@ -87,7 +87,7 @@ bot.on('message', (msg) => {
 
 message_type.forEach((type) => {
     // Runners then
-    global_e.runners,forEach(([test, callback]) => {
+    global_e.runners.forEach(([test, callback]) => {
         if (test instanceof String && test == type) 
             callback(msg, type, bot);
          else if (test instanceof RegExp)
