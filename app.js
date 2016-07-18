@@ -6,7 +6,7 @@ const Telegram = require('node-telegram-bot-api');
 const fs = require('fs');
 const config = require('./config.json');
 
-var bot = new Telegram(config.api-key, config.options);
+var bot = new Telegram(config['api-key'], config['options']);
 
 const message_type = ['text', 'audio', 'document', 'photo', 'sticker', 'video', 'voice', 'contact', 'location', 'new_chat_participant', 'left_chat_participant', 'new_chat_title', 'new_chat_photo', 'delete_chat_photo', 'group_chat_created'];
 const inline_type = ['inline_query', 'chosen_inline_result', 'callback_query'];
