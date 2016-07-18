@@ -109,3 +109,7 @@ inline_type.forEach((type) => {
             callback(msg, type, bot);
     })
 })
+
+bot.getMe().then((ret) => {
+    console.log(ret);
+})
