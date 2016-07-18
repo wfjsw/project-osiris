@@ -26,7 +26,11 @@ function getAllPluginsSync() {
 }
 
 function getJsFilename(original) {
-    return /^(.*)\.js$/.exec(original)[1];
+    var match = /^(.*)\.js$/.exec(original);
+    if (match)
+        return match[1];
+    else
+        return false;
 }
 
 function loadLib(id) {
