@@ -104,7 +104,7 @@ message_type.forEach((type) => {
 });
 
 inline_type.forEach((type) => {
-    global_e.runners,forEach(([test, callback]) => {
+    global_e.runners.forEach(([test, callback]) => {
         if (test instanceof String && test == type) 
             callback(msg, type, bot);
     })
