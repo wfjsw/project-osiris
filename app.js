@@ -84,7 +84,7 @@ function diverseListeners() {
     });
     global_e.runners.forEach(([test, callback]) => {
         // Diverse MediaType Listeners
-        if (test instanceof String && test in message_type)
+        if ((test instanceof String) && (test in message_type))
             global_e.msgtype_listeners[test].push(callback);
         // Diverse RegExpression Listeners
         else if (test instanceof RegExp) 
