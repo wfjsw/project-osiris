@@ -73,7 +73,7 @@ function loadAllPlugin() {
             global_e.preprocessors.push(global_e.plugins[plgname].preprocess);
         if (global_e.plugins[plgname].run)
             global_e.plugins[plgname].run.forEach((runobj) => {
-                global_e.plugins[plgname].runners.push(runobj);
+                global_e.runners.push(runobj);
             })
     }) 
 }
