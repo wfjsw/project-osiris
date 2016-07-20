@@ -79,6 +79,9 @@ function loadAllPlugin() {
 }
 
 function diverseListeners() {
+    global_e.message_type.forEach((type) => {
+        global_e.msgtype_listeners[type] = []; // init array
+    });
     global_e.runners.forEach(([test, callback]) => {
         // Diverse MediaType Listeners
         if (test instanceof String && test in message_type)
