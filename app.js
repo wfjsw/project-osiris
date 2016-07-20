@@ -15,7 +15,10 @@ var global_e = {
     libs: {},
     plugins: {},
     preprocessors: [],
-    runners: []
+    runners: [],
+
+    msgtype_listeners: {},
+    regex_listeners: []
 };
 
 function getAllLibrarySync() {
@@ -49,7 +52,7 @@ function loadAllLib() {
 
         console.log(`Loading library ${targetlib} ...`);
         global_e.libs[libname] = require(`./lib/${targetlib}`);
-\       if (global_e.libs[libname].init) 
+        if (global_e.libs[libname].init) 
                 global_e.libs[libname].init(global_e);
     }) 
 }
@@ -75,16 +78,52 @@ function loadAllPlugin() {
     }) 
 }
 
+function diverseListeners() {
+    global_e.runners.forEach(([test, callback]) => {
+        // Diverse MediaType Listeners
+        if (test instanceof String && test in message_type)
+            global_e.msgtype_listeners[test].push(callback);
+        // Diverse RegExpression Listeners
+        else if (test instanceof RegExp) 
+            global_e.regex_listeners.push([test, callback]);
+    });
+}
+
 loadAllLib();
 loadAllPlugin();
+diverseListeners();
 
 bot.on('message', (msg) => {
     // Preprocessor hook all messages
+    try {
     global_e.preprocessors.forEach((preprocessor) => {
         preprocessor(msg, bot);
     });
+
+    // Process MediaTypes
+    message_type.forEach((type) => {
+        if (msg[type]) 
+            global_e.msgtype_listeners[type].forEach((cb) => {
+                cb(msg, type, bot);
+            });
+    });
+    
+    // Process RegExp
+    global_e.regex_listeners.forEach( ([test, callback]) => {
+        var matches;
+        if (msg.text) matches = test.exec(msg.text);
+        else if (msg.caption) matches = test.exec(msg.caption);
+        if (matches)
+            callback(msg, matches, bot);
+    });
+    } catch (e) {
+        console.error(e);
+    }
 });
 
+
+
+/*
 message_type.forEach((type) => {
     // Runners then
     global_e.runners.forEach(([test, callback]) => {
@@ -108,7 +147,8 @@ inline_type.forEach((type) => {
         if (test instanceof String && test == type) 
             callback(msg, type, bot);
     })
-})
+});
+*/
 
 bot.getMe().then((ret) => {
     global_e.me(ret)
