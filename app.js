@@ -151,6 +151,6 @@ inline_type.forEach((type) => {
 */
 
 bot.getMe().then((ret) => {
-    global_e.me(ret)
+    global_e.me = ret;
     console.log(ret);
 })
