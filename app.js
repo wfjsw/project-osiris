@@ -44,7 +44,7 @@ function loadLib(id) {
 
 function loadAllLib() {
     global_e.libs = [];
-    var libfiles = getAllLibrarydSync();
+    var libfiles = getAllLibrarySync();
     libfiles.forEach((targetlib) => {
         var libname = getJsFilename(targetlib);
         if (!libname) return;
