@@ -79,7 +79,7 @@ function loadAllPlugin() {
 }
 
 function diverseListeners() {
-    global_e.message_type.forEach((type) => {
+    message_type.forEach((type) => {
         global_e.msgtype_listeners[type] = []; // init array
     });
     global_e.runners.forEach(([test, callback]) => {
