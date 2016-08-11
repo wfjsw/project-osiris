@@ -2,7 +2,7 @@
 
 'use strict';
 
-const Telegram = require('node-telegram-bot-api');
+const Telegram = require('./libtelegrambot');
 const fs = require('fs');
 const config = require('./config.json');
 
@@ -18,6 +18,7 @@ var global_e = {
     runners: [],
 
     msgtype_listeners: {},
+    edited_listeners: [],
     regex_listeners: []
 };
 
@@ -85,10 +86,13 @@ function diverseListeners() {
     inline_type.forEach((type) => {
         global_e.msgtype_listeners[type] = []; // init array
     });
+    global_e.edited_listeners[type] = []; // init array
     global_e.runners.forEach(([test, callback]) => {
         // Diverse MediaType Listeners
         if ((test.constructor == String) && ((message_type.indexOf(test) > -1) || (inline_type).indexOf(test) > -1))
             global_e.msgtype_listeners[test].push(callback);
+        else if (test == 'edited_message') 
+            global_e.edited_listeners.push(callback);
         // Diverse RegExpression Listeners
         else if (test instanceof RegExp) 
             global_e.regex_listeners.push([test, callback]);
@@ -122,6 +126,16 @@ bot.on('message', (msg) => {
         if (matches)
             callback(msg, matches, bot);
     });
+    } catch (e) {
+        console.error(e);
+    }
+});
+
+bot.on('edited_message', (msg) => {
+    try {
+        global_e.edited_listeners.forEach((cb) => {
+            cb(msg, 'edited_message', bot);
+        });
     } catch (e) {
         console.error(e);
     }
