@@ -82,9 +82,12 @@ function diverseListeners() {
     message_type.forEach((type) => {
         global_e.msgtype_listeners[type] = []; // init array
     });
+    inline_type.forEach((type) => {
+        global_e.msgtype_listeners[type] = []; // init array
+    });
     global_e.runners.forEach(([test, callback]) => {
         // Diverse MediaType Listeners
-        if ((test.constructor == String) && (message_type.indexOf(test) > -1))
+        if ((test.constructor == String) && ((message_type.indexOf(test) > -1) || (inline_type).indexOf(test) > -1))
             global_e.msgtype_listeners[test].push(callback);
         // Diverse RegExpression Listeners
         else if (test instanceof RegExp) 
@@ -124,34 +127,13 @@ bot.on('message', (msg) => {
     }
 });
 
-
-
-/*
-message_type.forEach((type) => {
-    // Runners then
-    global_e.runners.forEach(([test, callback]) => {
-        if (test instanceof String && test == type) 
-            callback(msg, type, bot);
-         else if (test instanceof RegExp)
-            var matches
-            switch (type) {
-                case 'text':
-                    matches = test.exec(msg.text);
-                case 'photo':
-                    matches = test.exec(msg.caption);
-            }
-                if (matches) 
-                    callback(msg, matches, bot);
-    })
-});
-
 inline_type.forEach((type) => {
-    global_e.runners.forEach(([test, callback]) => {
-        if (test instanceof String && test == type) 
-            callback(msg, type, bot);
+    bot.on(type, (msg) => {
+        global_e.msgtype_listeners[type].forEach((cb) => {
+            cb(msg, type, bot);
+        });
     })
 });
-*/
 
 bot.getMe().then((ret) => {
     global_e.me = ret;
