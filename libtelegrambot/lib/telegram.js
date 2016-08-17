@@ -26,7 +26,7 @@ var URL = require('url');
 var fs = require('fs');
 var pump = require('pump');
 
-var _messageTypes = ['text', 'audio', 'document', 'photo', 'sticker', 'video', 'voice', 'contact', 'location', 'new_chat_participant', 'left_chat_participant', 'new_chat_title', 'new_chat_photo', 'delete_chat_photo', 'group_chat_created'];
+var _messageTypes = ['text', 'audio', 'document', 'photo', 'sticker', 'video', 'voice', 'contact', 'location', 'venue', 'new_chat_member', 'left_chat_member', 'new_chat_title', 'new_chat_photo', 'delete_chat_photo', 'group_chat_created', 'pinned_message'];
 
 var TelegramBot = function (_EventEmitter) {
   _inherits(TelegramBot, _EventEmitter);
