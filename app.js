@@ -87,7 +87,7 @@ function diverseListeners() {
     inline_type.forEach((type) => {
         global_e.msgtype_listeners[type] = []; // init array
     });
-    global_e.edited_listeners[type] = []; // init array
+    global_e.edited_listeners = []; // init array
     global_e.runners.forEach(([test, callback]) => {
         // Diverse MediaType Listeners
         if ((test.constructor == String) && ((message_type.indexOf(test) > -1) || (inline_type).indexOf(test) > -1))
