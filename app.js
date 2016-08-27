@@ -104,6 +104,30 @@ loadAllLib();
 loadAllPlugin();
 diverseListeners();
 
+function trimCmd(command) {
+    try {
+        if (command.slice(0,1) == '/') {
+            var t1 = command.split(' ');
+            var t2 = t1[0].split('@')
+            if (t2.length > 1) {
+                var t3 = t2.pop();
+                if (t3 == global_e.me.username) {
+                    t1.shift();
+                    return t2.concat(t1).join(' ');
+                } else {
+                    return command;
+                }
+            } else {
+                return command;
+            }
+        } else {
+            return command;
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
 bot.on('message', (msg) => {
     // Preprocessor hook all messages
     try {
@@ -119,10 +143,11 @@ bot.on('message', (msg) => {
             });
     });
     
+    var trimmed = trimCmd(msg.text);
     // Process RegExp
     global_e.regex_listeners.forEach( ([test, callback]) => {
         var matches;
-        if (msg.text) matches = test.exec(msg.text);
+        if (msg.text) matches = test.exec(trimmed);
         else if (msg.caption) matches = test.exec(msg.caption);
         if (matches)
             callback(msg, matches, bot);
