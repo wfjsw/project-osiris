@@ -143,11 +143,10 @@ bot.on('message', (msg) => {
             });
     });
     
-    var trimmed = trimCmd(msg.text);
     // Process RegExp
     global_e.regex_listeners.forEach( ([test, callback]) => {
         var matches;
-        if (msg.text) matches = test.exec(trimmed);
+        if (msg.text) matches = test.exec(trimCmd(msg.text));
         else if (msg.caption) matches = test.exec(msg.caption);
         if (matches)
             callback(msg, matches, bot);
