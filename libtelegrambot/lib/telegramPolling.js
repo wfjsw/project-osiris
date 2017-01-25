@@ -4,142 +4,189 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Promise = require('bluebird');
 var debug = require('debug')('node-telegram-bot-api');
-var request = require('request-promise');
-var URL = require('url');
 var ANOTHER_WEB_HOOK_USED = 409;
 
 var TelegramBotPolling = function () {
-  function TelegramBotPolling(token) {
-    var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+  /**
+   * Handles polling against the Telegram servers.
+   *
+   * @param  {Function} request Function used to make HTTP requests
+   * @param  {Boolean|Object} options Polling options
+   * @param  {Number} [options.timeout=10] Timeout in seconds for long polling
+   * @param  {Number} [options.interval=300] Interval between requests in milliseconds
+   * @param  {Function} callback Function for processing a new update
+   * @see https://core.telegram.org/bots/api#getupdates
+   */
+  function TelegramBotPolling(request) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     var callback = arguments[2];
 
     _classCallCheck(this, TelegramBotPolling);
 
-    // enable cancellation
-    Promise.config({
-      cancellation: true
-    });
-
+    /* eslint-disable no-param-reassign */
     if (typeof options === 'function') {
-      callback = options; // eslint-disable-line no-param-reassign
-      options = {}; // eslint-disable-line no-param-reassign
+      callback = options;
+      options = {};
+    } else if (typeof options === 'boolean') {
+      options = {};
     }
+    /* eslint-enable no-param-reassign */
 
-    this.offset = 0;
-    this.token = token;
+    this.request = request;
+    this.options = options;
+    this.options.timeout = typeof options.timeout === 'number' ? options.timeout : 10;
+    this.options.interval = typeof options.interval === 'number' ? options.interval : 300;
     this.callback = callback;
-    this.timeout = options.timeout || 10;
-    this.interval = typeof options.interval === 'number' ? options.interval : 300;
-    this.lastUpdate = 0;
-    this.lastRequest = null;
-    this.abort = false;
-    this._polling();
+    this._offset = 0;
+    this._lastUpdate = 0;
+    this._lastRequest = null;
+    this._abort = false;
+    this._pollingTimeout = null;
   }
 
+  /**
+   * Start polling
+   * @param  {Object} [options]
+   * @param  {Object} [options.restart]
+   * @return {Promise}
+   */
+
+
   _createClass(TelegramBotPolling, [{
-    key: 'stopPolling',
-    value: function stopPolling() {
-      this.abort = true;
-      // wait until the last request is fulfilled
-      return this.lastRequest;
+    key: 'start',
+    value: function start() {
+      var _this = this;
+
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+      if (this._lastRequest) {
+        if (!options.restart) {
+          return Promise.resolve();
+        }
+        return this.stop({
+          cancel: true,
+          reason: 'Polling restart'
+        }).then(function () {
+          return _this._polling();
+        });
+      }
+      return this._polling();
     }
+
+    /**
+     * Stop polling
+     * @param  {Object} [options]
+     * @param  {Boolean} [options.cancel] Cancel current request
+     * @param  {String} [options.reason] Reason for stopping polling
+     * @return {Promise}
+     */
+
+  }, {
+    key: 'stop',
+    value: function stop() {
+      var _this2 = this;
+
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+      if (!this._lastRequest) {
+        return Promise.resolve();
+      }
+      var lastRequest = this._lastRequest;
+      this._lastRequest = null;
+      clearTimeout(this._pollingTimeout);
+      if (options.cancel) {
+        var reason = options.reason || 'Polling stop';
+        lastRequest.cancel(reason);
+        return Promise.resolve();
+      }
+      this._abort = true;
+      return lastRequest.finally(function () {
+        _this2._abort = false;
+      });
+    }
+
+    /**
+     * Return `true` if is polling. Otherwise, `false`.
+     */
+
+  }, {
+    key: 'isPolling',
+    value: function isPolling() {
+      return !!this._lastRequest;
+    }
+
+    /**
+     * Invokes polling (with recursion!)
+     * @return {Promise} promise of the current request
+     * @private
+     */
+
   }, {
     key: '_polling',
     value: function _polling() {
-      var _this = this;
+      var _this3 = this;
 
-      this.lastRequest = this._getUpdates().then(function (updates) {
-        _this.lastUpdate = Date.now();
+      this._lastRequest = this._getUpdates().then(function (updates) {
+        _this3._lastUpdate = Date.now();
         debug('polling data %j', updates);
         updates.forEach(function (update) {
-          _this.offset = update.update_id;
-          debug('updated offset: %s', _this.offset);
-          _this.callback(update);
+          _this3._offset = update.update_id;
+          debug('updated offset: %s', _this3._offset);
+          _this3.callback(update);
         });
       }).catch(function (err) {
         debug('polling error: %s', err.message);
         throw err;
       }).finally(function () {
-        if (_this.abort) {
+        if (_this3._abort) {
           debug('Polling is aborted!');
         } else {
-          debug('setTimeout for %s miliseconds', _this.interval);
-          setTimeout(function () {
-            return _this._polling();
-          }, _this.interval);
+          debug('setTimeout for %s miliseconds', _this3.options.interval);
+          _this3._pollingTimeout = setTimeout(function () {
+            return _this3._polling();
+          }, _this3.options.interval);
         }
       });
+      return this._lastRequest;
     }
 
-    // used so that other funcs are not non-optimizable
+    /**
+     * Unset current webhook. Used when we detect that a webhook has been set
+     * and we are trying to poll. Polling and WebHook are mutually exclusive.
+     * @see https://core.telegram.org/bots/api#getting-updates
+     * @private
+     */
 
-  }, {
-    key: '_safeParse',
-    value: function _safeParse(json) {
-      try {
-        return JSON.parse(json);
-      } catch (err) {
-        throw new Error('Error parsing Telegram response: ' + String(json));
-      }
-    }
   }, {
     key: '_unsetWebHook',
     value: function _unsetWebHook() {
-      return request({
-        url: URL.format({
-          protocol: 'https',
-          host: 'api.telegram.org',
-          pathname: '/bot' + this.token + '/setWebHook'
-        }),
-        simple: false,
-        resolveWithFullResponse: true
-      }).promise().then(function (resp) {
-        if (!resp) {
-          throw new Error(resp);
-        }
-        return [];
-      });
+      return this.request('setWebHook');
     }
+
+    /**
+     * Retrieve updates
+     */
+
   }, {
     key: '_getUpdates',
     value: function _getUpdates() {
-      var _this2 = this;
+      var _this4 = this;
 
       var opts = {
         qs: {
-          offset: this.offset + 1,
-          limit: this.limit,
-          timeout: this.timeout
-        },
-        url: URL.format({
-          protocol: 'https',
-          host: 'api.telegram.org',
-          pathname: '/bot' + this.token + '/getUpdates'
-        }),
-        simple: false,
-        resolveWithFullResponse: true,
-        forever: true
+          offset: this._offset + 1,
+          limit: this.options.limit,
+          timeout: this.options.timeout
+        }
       };
       debug('polling with options: %j', opts);
 
-      return request(opts).promise().timeout((10 + this.timeout) * 1000).then(function (resp) {
-        if (resp.statusCode === ANOTHER_WEB_HOOK_USED) {
-          return _this2._unsetWebHook();
+      return this.request('getUpdates', opts).catch(function (err) {
+        if (err.response.statusCode === ANOTHER_WEB_HOOK_USED) {
+          return _this4._unsetWebHook();
         }
-
-        if (resp.statusCode !== 200) {
-          throw new Error(resp.statusCode + ' ' + resp.body);
-        }
-
-        var data = _this2._safeParse(resp.body);
-
-        if (data.ok) {
-          return data.result;
-        }
-
-        throw new Error(data.error_code + ' ' + data.description);
+        throw err;
       });
     }
   }]);
