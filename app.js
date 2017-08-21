@@ -2,7 +2,7 @@
 
 'use strict';
 
-const Telegram = require('./libtelegrambot');
+const Telegram = require('node-telegram-bot-api');
 const fs = require('fs');
 const config = require('./config.json');
 
