@@ -155,7 +155,7 @@ function trimCmd(command) {
 function decStart(command) {
     let match = command.match(/^\/start DEC-(.+)/)
     if (match) {
-        return `/start ${b64url.decode(match[0])}`
+        return `/start ${b64url.decode(match[1])}`
     } else {
         return command
     }
