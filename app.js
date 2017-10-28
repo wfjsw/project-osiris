@@ -2,7 +2,7 @@
 
 const Telegram = require('node-telegram-bot-api');
 const fs = require('fs');
-const dec = require('base64-url').decode
+const b64url = require('base64-url')
 const config = require('./config.json');
 
 var bot = new Telegram(config['api-key'], config['options']);
@@ -155,7 +155,7 @@ function trimCmd(command) {
 function decStart(command) {
     let match = command.match(/^\/start DEC-(.+)/)
     if (match) {
-        return `/start ${dec(match[0])}`
+        return `/start ${b64url.decode(match[0])}`
     } else {
         return command
     }
