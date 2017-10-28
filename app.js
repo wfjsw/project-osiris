@@ -2,6 +2,7 @@
 
 const Telegram = require('node-telegram-bot-api');
 const fs = require('fs');
+const dec = require('base64-url').decode
 const config = require('./config.json');
 
 var bot = new Telegram(config['api-key'], config['options']);
@@ -151,6 +152,15 @@ function trimCmd(command) {
     }
 }
 
+function decStart(command) {
+    let match = command.match(/^\/start DEC-(.+)/)
+    if (match) {
+        return `/start ${dec(match[0])}`
+    } else {
+        return command
+    }
+}
+
 bot.on('message', (msg) => {
     // Preprocessor hook all messages
     try {
@@ -169,7 +179,7 @@ bot.on('message', (msg) => {
         // Process RegExp
         global_e.regex_listeners.forEach(([test, callback]) => {
             var matches;
-            if (msg.text) matches = test.exec(trimCmd(msg.text));
+            if (msg.text) matches = test.exec(decStart(trimCmd(msg.text)))
             else if (msg.caption) matches = test.exec(msg.caption);
             if (matches)
                 callback(msg, matches, bot);
